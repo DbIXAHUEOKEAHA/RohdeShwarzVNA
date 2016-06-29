@@ -50,11 +50,13 @@ class VnaDiagram(object):
     def is_maximized(self):
         scpi = ":DISP:WIND{0}:MAX?"
         scpi = scpi.format(self._index)
-        self._vna.query(scpi).strip() == "1"
+        return self._vna.query(scpi).strip() == "1"
+
     def maximize(self):
         scpi = ":DISP:WIND{0}:MAX 1"
         scpi = scpi.format(self._index)
         self._vna.write(scpi)
+
     def normal_size(self):
         scpi = ":DISP:WIND{0}:MAX 0"
         scpi = scpi.format(self._index)
