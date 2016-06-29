@@ -120,10 +120,7 @@ class Vna(GenericInstrument):
 
     def copy_channel(self, original_index, new_index=None):
         self.channel(original_index).select()
-        if not new_index:
-            return create_channel()
-        else:
-            create_channel(new_index)
+        return self.create_channel()
 
     def delete_channel(self, index):
         self.write(':CONF:CHAN{0} 0'.format(index))
