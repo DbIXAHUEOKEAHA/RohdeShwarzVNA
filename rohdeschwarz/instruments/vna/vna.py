@@ -13,6 +13,7 @@ from rohdeschwarz.instruments.vna.filesystem    import FileSystem, Directory
 import numpy as np
 
 class ImageFormat(Enum):
+    """Image formats supported by VNA for screenshots"""
     bmp = 'BMP'
     png = 'PNG'
     jpg = 'JPG'
@@ -22,6 +23,7 @@ class ImageFormat(Enum):
         return self.value
 
 class Vna(GenericInstrument):
+    """Rohde & Schwarz VNA Driver"""
     def __init__(self):
         super(Vna, self).__init__()
         self.properties = Properties(self)
@@ -42,6 +44,11 @@ class Vna(GenericInstrument):
         self.write(scpi)
 
     def print_info(self):
+        """
+        Logs VNA info in log file
+
+        This method requires that a log file is open. See [Vna.open_log](Vna.open_log)
+        """
         _log = self.log
         self.log = None
         _log.write('VNA INSTRUMENT INFO\n')
