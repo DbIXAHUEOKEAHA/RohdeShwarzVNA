@@ -3,7 +3,7 @@
 from rohdeschwarz.instruments.vna import Vna
 
 vna = Vna()
-vna.open_tcp('localhost')
+vna.open_tcp('169.254.82.39')
 
 # Optional preset
 vna.clear_status()

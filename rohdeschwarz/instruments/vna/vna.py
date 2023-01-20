@@ -10,7 +10,7 @@ from rohdeschwarz.instruments.vna.trace         import Trace
 from rohdeschwarz.instruments.vna.properties    import Properties
 from rohdeschwarz.instruments.vna.settings      import Settings
 from rohdeschwarz.instruments.vna.filesystem    import FileSystem, Directory
-
+import numpy as np
 
 class ImageFormat(Enum):
     bmp = 'BMP'
@@ -32,6 +32,14 @@ class Vna(GenericInstrument):
         if self.connected():
             self.local()
             self.close()
+            
+    def display_screen(self):
+        scpi = 'SYST:DISP:UPD 1'
+        self.write(scpi)
+        
+    def autoscale(self):
+        scpi = 'DISP:WIND:TRAC:Y:AUTO ONCE'
+        self.write(scpi)
 
     def print_info(self):
         _log = self.log
@@ -99,9 +107,9 @@ class Vna(GenericInstrument):
     def copy_channel(self, original_index, new_index=None):
         self.channel(original_index).select()
         if not new_index:
-            return create_channel()
+            return self.create_channel()
         else:
-            create_channel(new_index)
+            self.create_channel(new_index)
 
     def delete_channel(self, index):
         self.write(':CONF:CHAN{0} 0'.format(index))
@@ -535,3 +543,105 @@ class Vna(GenericInstrument):
             return True
         else:
             return False
+    
+    def start_freq(self):
+        scpi = 'FREQ:START?'
+        return self.query(scpi)
+    
+    def stop_freq(self):
+        scpi = 'FREQ:STOP?'
+        return self.query(scpi)
+    
+    def cent_freq(self):
+        scpi = 'FREQ:CENT?'
+        return self.query(scpi)
+    
+    def span_freq(self):
+        scpi = 'FREQ:SPAN?'
+        return self.query(scpi)
+    
+    def set_start_freq(self, value):
+        scpi = f'FREQ:START {value}'
+        self.write(scpi)
+        
+    def set_stop_freq(self, value):
+        scpi = f'FREQ:STOP {value}'
+        self.write(scpi)
+        
+    def set_span_freq(self, value):
+        scpi = f'FREQ:SPAN {value}'
+        self.write(scpi)
+        
+    def set_cent_freq(self, value):
+        scpi = f'FREQ:CENT {value}'
+        self.write(scpi)
+        
+    def power(self):
+        scpi = 'SOUR:POW?'
+        return self.query(scpi)
+    
+    def set_power(self, value):
+        scpi = f'SOUR:POW {value}'
+        self.write(scpi)
+        
+    def set_directory(self, value):
+        scpi = f'MMEM:CDIR {value}'
+        self.write(scpi)
+
+    def get_data(self, value):
+        scpi = f'MMEM:DATA \'{value}\''
+        self.write(scpi)
+        
+    def start_sweep(self):
+        scpi = 'INIT1:IMM'
+        self.write(scpi)
+        self.write('*WAI')
+        
+    def trace_real(self):
+        self.autoscale()
+        scpi = 'CALC1:FORM REAL'
+        self.write(scpi)
+        scpi = 'CALC1:DATA? FDAT'
+        return self.query(scpi)
+    
+    def trace_im(self):
+        self.autoscale()
+        scpi = 'CALC1:FORM IMAG'
+        self.write(scpi)
+        scpi = 'CALC1:DATA? FDAT'
+        return self.query(scpi)
+    
+    def num_points(self):
+        scpi = 'SWE:POIN?'
+        return self.query(scpi)
+
+    def set_num_points(self, value):
+        scpi = f'SWE:POIN {value}'
+        self.write(scpi)
+        
+    def bandwidth(self):
+        scpi = 'BAND?'
+        return self.query(scpi)
+    
+    def set_bandwidth(self, value):
+        scpi = f'BAND {value}'
+        self.write(scpi)
+        
+    def reverse_sweep(self, start, stop, num_points):
+        "returns tuple ([freq], [real], [imag])"
+        points = np.linspace(start, stop, num_points)
+        delta = (stop - start) / num_points
+        freq = []
+        trace_real = []
+        trace_im = []
+        for ind, point in enumerate(points[::-1]):
+            self.set_start_freq(point + delta)
+            self.set_stop_freq(points[::-1][ind])
+            self.set_num_points(1)
+            self.start_sweep()
+            freq.append(point)
+            trace_real.append(self.trace_real())
+            trace_im.append(self.trace_im())
+        
+        return freq, trace_real, trace_im
+            
